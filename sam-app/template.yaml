@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    sam-app
+
+    Sample SAM Template for sam-app
+
+Globals:
+    Function:
+        Timeout: 3
+
+Resources:
+
+    HelloWorldFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: hello_world/
+            Handler: app.lambdaHandler
+            Runtime: nodejs8.10
+            Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+                Variables:
+                    PARAM1: VALUE
+            Events:
+                HelloWorld:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /hello
+                        Method: get
+
+    SpaSampleFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: spa_sample/
+            Handler: index.handler
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    PARAM1: VALUE
+
+    SpaSampleLambdaPermission:
+        Type: "AWS::Lambda::Permission"
+        Properties:
+            Action: lambda:InvokeFunction
+            FunctionName: !Ref SpaSampleFunction
+            Principal: apigateway.amazonaws.com
+
+    SpaSampleApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: Prod
+            DefinitionBody:
+                swagger: "2.0"
+                info:
+                    title: sam-apig-resource-policy-api
+                schemes:
+                    - https
+                paths:
+                    /contents/{filename+}:
+                        get:
+                            summary: "spa sample api"
+                            description: "spa sample api"
+                            produces:
+                                - "application/json"
+                            x-amazon-apigateway-integration:
+                                responses:
+                                    default:
+                                        statusCode: "200"
+                                uri:
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SpaSampleFunction.Arn}/invocations
+                                passthroughBehavior: "when_no_match"
+                                httpMethod: "POST"
+                                contentHandling: "CONVERT_TO_TEXT"
+                                type: "aws_proxy"
+
+Outputs:
+
+    HelloWorldApi:
+      Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+
+    HelloWorldFunction:
+      Description: "Hello World Lambda Function ARN"
+      Value: !GetAtt HelloWorldFunction.Arn
+
+    HelloWorldFunctionIamRole:
+      Description: "Implicit IAM Role created for Hello World function"
+      Value: !GetAtt HelloWorldFunctionRole.Arn
+
+    SpaSampleFunction:
+      Description: "Spa Sample Lambda Function ARN"
+      Value: !GetAtt SpaSampleFunction.Arn
+
+    SpaSampleFunctionIamRole:
+      Description: "Implicit IAM Role created for Spa Sample function"
+      Value: !GetAtt SpaSampleFunctionRole.Arn
+
