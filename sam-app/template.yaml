@@ -27,50 +27,21 @@ Resources:
                         Path: /hello
                         Method: get
 
-    SpaSampleFunction:
+    SiteNameFunction:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: spa_sample/
+            CodeUri: siteName/
             Handler: index.handler
             Runtime: nodejs8.10
             Environment:
                 Variables:
                     PARAM1: VALUE
-
-    SpaSampleLambdaPermission:
-        Type: "AWS::Lambda::Permission"
-        Properties:
-            Action: lambda:InvokeFunction
-            FunctionName: !Ref SpaSampleFunction
-            Principal: apigateway.amazonaws.com
-
-    SpaSampleApi:
-        Type: AWS::Serverless::Api
-        Properties:
-            StageName: Prod
-            DefinitionBody:
-                swagger: "2.0"
-                info:
-                    title: sam-apig-resource-policy-api
-                schemes:
-                    - https
-                paths:
-                    /contents/{filename+}:
-                        get:
-                            summary: "spa sample api"
-                            description: "spa sample api"
-                            produces:
-                                - "application/json"
-                            x-amazon-apigateway-integration:
-                                responses:
-                                    default:
-                                        statusCode: "200"
-                                uri:
-                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SpaSampleFunction.Arn}/invocations
-                                passthroughBehavior: "when_no_match"
-                                httpMethod: "POST"
-                                contentHandling: "CONVERT_TO_TEXT"
-                                type: "aws_proxy"
+            Events:
+                SpaSample:
+                    Type: Api
+                    Properties:
+                        Path: /contents/{filename+}
+                        Method: get
 
 Outputs:
 
@@ -86,11 +57,15 @@ Outputs:
       Description: "Implicit IAM Role created for Hello World function"
       Value: !GetAtt HelloWorldFunctionRole.Arn
 
-    SpaSampleFunction:
-      Description: "Spa Sample Lambda Function ARN"
-      Value: !GetAtt SpaSampleFunction.Arn
+    SiteNameApi:
+      Description: "API Gateway endpoint URL for Prod stage for Spa Sample function"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contents/{filename+}"
 
-    SpaSampleFunctionIamRole:
-      Description: "Implicit IAM Role created for Spa Sample function"
-      Value: !GetAtt SpaSampleFunctionRole.Arn
+    SiteNameFunction:
+      Description: "Site Name Lambda Function ARN"
+      Value: !GetAtt SiteNameFunction.Arn
+
+    SiteNameFunctionIamRole:
+      Description: "Implicit IAM Role created for Site Name function"
+      Value: !GetAtt SiteNameFunctionRole.Arn
 

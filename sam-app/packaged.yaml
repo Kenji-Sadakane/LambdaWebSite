@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'sam-app
+
+  Sample SAM Template for sam-app
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Outputs:
+  HelloWorldApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  HelloWorldFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunction
+      - Arn
+  HelloWorldFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunctionRole
+      - Arn
+  SiteNameApi:
+    Description: API Gateway endpoint URL for Prod stage for Spa Sample function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/contents/{filename+}
+  SiteNameFunction:
+    Description: Site Name Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - SiteNameFunction
+      - Arn
+  SiteNameFunctionIamRole:
+    Description: Implicit IAM Role created for Site Name function
+    Value:
+      Fn::GetAtt:
+      - SiteNameFunctionRole
+      - Arn
+Resources:
+  HelloWorldFunction:
+    Properties:
+      CodeUri: s3://site-name-20190112-cloud-formation/bca038875357cfed22f2dd40e9ee916a
+      Environment:
+        Variables:
+          PARAM1: VALUE
+      Events:
+        HelloWorld:
+          Properties:
+            Method: get
+            Path: /hello
+          Type: Api
+      Handler: app.lambdaHandler
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  SiteNameFunction:
+    Properties:
+      CodeUri: s3://site-name-20190112-cloud-formation/80c5165d03ce5eace5cb77a1c34f65a7
+      Environment:
+        Variables:
+          PARAM1: VALUE
+      Events:
+        SpaSample:
+          Properties:
+            Method: get
+            Path: /contents/{filename+}
+          Type: Api
+      Handler: index.handler
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31
