@@ -5,7 +5,7 @@ global.stringUtil = stringUtil;
 exports.handler = async (event, context, callback) => {
     console.log('event: ' + JSON.stringify(event));
     console.log('context: ' + JSON.stringify(context));
-    let filename = event.pathParameters.filename;
+    let filename = getTargetFileName(event.pathParameters);
     let extension = stringUtil.getExtensionFromPath(filename);
     let contentsPath = 'contents/' + extension + '/' + filename;
     console.log('filename: ' + filename);
@@ -14,6 +14,17 @@ exports.handler = async (event, context, callback) => {
 
     createResponse(callback, 200, createHeaders(extension), createContent(contentsPath));
     // return content;
+};
+
+const getTargetFileName = function(pathParameters) {
+    let filename = 'index.html';
+    if (pathParameters != null && pathParameters.filename != null) {
+        filename = pathParameters.filename;
+        if (filename.indexOf('.') == -1) {
+            filename += '/index.html';
+        }
+    }
+    return filename;
 };
 
 const createHeaders = function(extension) {
@@ -31,9 +42,9 @@ const createHeaders = function(extension) {
 };
 
 const createContent = function(contentsPath) {
-    // let content = "<!doctype html><html><body><h1 style='color:red;'>"+path+"</h1></body></html>";
     let data = fs.readFileSync(contentsPath);
-    let content = data.toString('ascii', 0, data.length);
+    //let content = data.toString('ascii', 0, data.length);
+    let content = data.toString();
     return content;
 };
 
